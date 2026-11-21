@@ -34,6 +34,14 @@ public sealed class WaterSortGame : MonoBehaviour
     private int selected = -1;
     private bool solved;
     private string feedback = "";
+    private Texture2D backgroundArt;
+    private Texture2D topPanelArt;
+    private Texture2D levelFrameArt;
+    private Texture2D tubeArt;
+    private Texture2D restartButtonArt;
+    private Texture2D nextButtonArt;
+    private Texture2D winArt;
+    private Texture2D starFilledArt;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Launch()
@@ -48,7 +56,31 @@ public sealed class WaterSortGame : MonoBehaviour
 
     private void Awake()
     {
+        LoadArt();
         OpenGroup(Mathf.Clamp(PlayerPrefs.GetInt(SavePrefix + "group"), 0, Groups.Length - 1));
+    }
+
+    private void LoadArt()
+    {
+        backgroundArt = LoadArtTexture("Background/game_background");
+        topPanelArt = LoadArtTexture("UI/panel_top");
+        levelFrameArt = LoadArtTexture("UI/level_frame");
+        tubeArt = LoadArtTexture("Tubes/tube_glass");
+        restartButtonArt = LoadArtTexture("UI/button_restart");
+        nextButtonArt = LoadArtTexture("UI/button_next");
+        winArt = LoadArtTexture("Finish/you_win");
+        starFilledArt = LoadArtTexture("Finish/star_filled");
+    }
+
+    private static Texture2D LoadArtTexture(string path)
+    {
+        return Resources.Load<Texture2D>("Art/FruitsBomb/" + path);
+    }
+
+    private static void DrawArt(Texture2D texture, Rect rect, ScaleMode scaleMode = ScaleMode.StretchToFill)
+    {
+        if (texture != null)
+            GUI.DrawTexture(rect, texture, scaleMode, true);
     }
 
     private string GroupKey => SavePrefix + Groups[group];
@@ -171,9 +203,12 @@ public sealed class WaterSortGame : MonoBehaviour
         GUI.matrix = Matrix4x4.TRS(
             new Vector3((Screen.width - width * scale) / 2, (Screen.height - height * scale) / 2, 0),
             Quaternion.identity, new Vector3(scale, scale, 1));
-        Fill(new Rect(0, 0, width, height), new Color32(21, 30, 45, 255));
+        DrawArt(backgroundArt, new Rect(0, 0, width, height), ScaleMode.ScaleAndCrop);
+        Fill(new Rect(0, 0, width, height), new Color32(10, 40, 70, 38));
+        DrawArt(topPanelArt, new Rect(0, 0, width, 118));
 
         var heading = new GUIStyle(GUI.skin.label) { fontSize = 29, fontStyle = FontStyle.Bold };
+        heading.normal.textColor = Color.white;
         GUI.Label(new Rect(30, 30, 420, 45), "Chromatic Pour", heading);
         for (int i = 0; i < Groups.Length; i++)
         {
@@ -182,6 +217,7 @@ public sealed class WaterSortGame : MonoBehaviour
                 OpenGroup(i);
         }
         GUI.enabled = true;
+        DrawArt(levelFrameArt, new Rect(304, 116, 110, 44));
         GUI.Label(new Rect(32, 122, 260, 24),
             $"Level {level + 1} / {Levels.Length}    Moves {history.Count}" + (cleared ? "    Cleared" : ""));
         levelInput = GUI.TextField(new Rect(304, 122, 88, 27), levelInput, 5);
@@ -215,22 +251,31 @@ public sealed class WaterSortGame : MonoBehaviour
                 Fill(rect, Colors[color]);
                 GUI.Label(rect, Symbols[color].ToString(), marker);
             }
+            DrawArt(tubeArt, new Rect(x - 1, y - 8, 48, 153), ScaleMode.StretchToFill);
             GUI.Label(new Rect(x + 13, y + 125, 32, 18), (i + 1).ToString());
         }
 
         string status = feedback;
-        if (solved)
-            status = "Level cleared.";
-        GUI.Label(new Rect(32, 501, 416, 32), status);
+        if (solved && winArt != null)
+        {
+            DrawArt(winArt, new Rect(148, 478, 184, 55), ScaleMode.ScaleToFit);
+            if (starFilledArt != null)
+            {
+                DrawArt(starFilledArt, new Rect(190, 428, 42, 42), ScaleMode.ScaleToFit);
+                DrawArt(starFilledArt, new Rect(240, 428, 42, 42), ScaleMode.ScaleToFit);
+            }
+        }
+        else
+            GUI.Label(new Rect(32, 501, 416, 32), status);
 
         GUI.enabled = history.Count > 0;
-        if (GUI.Button(new Rect(32, 552, 128, 42), "Undo"))
+        if (GUI.Button(new Rect(32, 548, 128, 58), "Undo"))
             Undo();
         GUI.enabled = true;
-        if (GUI.Button(new Rect(176, 552, 128, 42), "Restart"))
+        if (GUI.Button(new Rect(176, 548, 128, 58), new GUIContent(restartButtonArt)))
             LoadLevel(level);
         GUI.enabled = cleared && level + 1 < Levels.Length;
-        if (GUI.Button(new Rect(320, 552, 128, 42), "Next level"))
+        if (GUI.Button(new Rect(320, 548, 128, 58), new GUIContent(nextButtonArt)))
             LoadLevel(level + 1);
         GUI.enabled = true;
         GUI.matrix = previousMatrix;
