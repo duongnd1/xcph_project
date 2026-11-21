@@ -34,6 +34,3 @@ sysinfo.txt
 *.apk
 *.aab
 *.unitypackage
-
-# Imported reference pack (keep source art local, commit only selected runtime art)
-FruitsBomb_10.8.1364_Assets/
