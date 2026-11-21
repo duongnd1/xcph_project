@@ -42,12 +42,6 @@ public sealed class WaterSortGame : MonoBehaviour
     private Texture2D nextButtonArt;
     private Texture2D winArt;
     private Texture2D starFilledArt;
-    private readonly Texture2D[] fruitArt = new Texture2D[13];
-    private static readonly string[] FruitSources =
-    {
-        "strawberry", "apple", "blueberry", "banana", "grape", "orange", "acorn", "mushroom",
-        "strawberry", "apple", "blueberry", "banana", "grape"
-    };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Launch()
@@ -76,8 +70,6 @@ public sealed class WaterSortGame : MonoBehaviour
         nextButtonArt = LoadArtTexture("UI/button_next");
         winArt = LoadArtTexture("Finish/you_win");
         starFilledArt = LoadArtTexture("Finish/star_filled");
-        for (int i = 0; i < fruitArt.Length; i++)
-            fruitArt[i] = LoadArtTexture("Fruits/fruit_" + FruitSources[i]);
     }
 
     private static Texture2D LoadArtTexture(string path)
@@ -239,6 +231,8 @@ public sealed class WaterSortGame : MonoBehaviour
         GUI.Label(new Rect(32, 153, 416, 24), "Select a tube, then select where to pour.");
 
         int columns = Mathf.Min(tubes.Count, 8);
+        var marker = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 11 };
+        marker.normal.textColor = new Color32(21, 30, 45, 255);
         for (int i = 0; i < tubes.Count; i++)
         {
             int row = i / columns;
@@ -254,9 +248,8 @@ public sealed class WaterSortGame : MonoBehaviour
             {
                 int color = tubes[i][j];
                 var rect = new Rect(x + 7, y + 123 - (j + 1) * layer, 32, layer - 1);
-                Fill(rect, new Color32(255, 255, 255, 22));
-                Texture2D fruit = fruitArt[Mathf.Clamp(color, 0, fruitArt.Length - 1)];
-                DrawArt(fruit, new Rect(rect.x, rect.y, rect.width, rect.height), ScaleMode.ScaleToFit);
+                Fill(rect, Colors[color]);
+                GUI.Label(rect, Symbols[color].ToString(), marker);
             }
             DrawArt(tubeArt, new Rect(x - 1, y - 8, 48, 153), ScaleMode.StretchToFill);
             GUI.Label(new Rect(x + 13, y + 125, 32, 18), (i + 1).ToString());
