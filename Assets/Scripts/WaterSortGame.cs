@@ -205,121 +205,84 @@ public sealed class WaterSortGame : MonoBehaviour
     private void OnGUI()
     {
         const float width = 480;
-        const float height = 800;
+        const float height = 630;
         Matrix4x4 previousMatrix = GUI.matrix;
         float scale = Mathf.Min(Screen.width / width, Screen.height / height);
         GUI.matrix = Matrix4x4.TRS(
             new Vector3((Screen.width - width * scale) / 2, (Screen.height - height * scale) / 2, 0),
             Quaternion.identity, new Vector3(scale, scale, 1));
         DrawArt(backgroundArt, new Rect(0, 0, width, height), ScaleMode.ScaleAndCrop);
-        Fill(new Rect(0, 0, width, height), new Color32(10, 40, 70, 24));
+        Fill(new Rect(0, 0, width, height), new Color32(10, 40, 70, 38));
         DrawArt(topPanelArt, new Rect(0, 0, width, 118));
 
-        var heading = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 29,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter
-        };
+        var heading = new GUIStyle(GUI.skin.label) { fontSize = 29, fontStyle = FontStyle.Bold };
         heading.normal.textColor = Color.white;
-        GUI.Label(new Rect(30, 22, 420, 48), "Chromatic Pour", heading);
-
-        var tabStyle = new GUIStyle(GUI.skin.button)
-        {
-            fontSize = 15,
-            fontStyle = FontStyle.Bold
-        };
-        tabStyle.normal.textColor = Color.white;
-        tabStyle.hover.textColor = Color.white;
+        GUI.Label(new Rect(30, 30, 420, 45), "Chromatic Pour", heading);
         for (int i = 0; i < Groups.Length; i++)
         {
             GUI.enabled = i != group;
-            if (GUI.Button(new Rect(24 + i * 108, 100, 104, 38), Groups[i], tabStyle))
+            if (GUI.Button(new Rect(32 + i * 105, 83, 100, 30), Groups[i]))
                 OpenGroup(i);
         }
         GUI.enabled = true;
-
-        var infoStyle = new GUIStyle(GUI.skin.label) { fontSize = 17 };
-        infoStyle.normal.textColor = Color.white;
-        GUI.Label(new Rect(24, 151, 220, 28), $"Level {level + 1} / {Levels.Length}", infoStyle);
-        GUI.Label(new Rect(238, 151, 90, 28), $"Moves {history.Count}", infoStyle);
-
-        DrawArt(levelFrameArt, new Rect(324, 145, 104, 44));
-        var inputStyle = new GUIStyle(GUI.skin.textField)
-        {
-            fontSize = 17,
-            alignment = TextAnchor.MiddleCenter
-        };
-        levelInput = GUI.TextField(new Rect(333, 153, 76, 28), levelInput, 5, inputStyle);
-        if (GUI.Button(new Rect(432, 149, 48, 34), "Go", tabStyle))
+        DrawArt(levelFrameArt, new Rect(304, 116, 110, 44));
+        GUI.Label(new Rect(32, 122, 260, 24),
+            $"Level {level + 1} / {Levels.Length}    Moves {history.Count}" + (cleared ? "    Cleared" : ""));
+        levelInput = GUI.TextField(new Rect(304, 122, 88, 27), levelInput, 5);
+        if (GUI.Button(new Rect(399, 122, 48, 27), "Go"))
         {
             if (int.TryParse(levelInput, out int number) && number >= 1 && number <= Levels.Length)
                 LoadLevel(number - 1);
             else
                 feedback = $"Enter a level from 1 to {Levels.Length}.";
         }
-        GUI.Label(new Rect(24, 190, 432, 26), "Select a tube, then select where to pour.", infoStyle);
+        GUI.Label(new Rect(32, 153, 416, 24), "Select a tube, then select where to pour.");
 
-        int columns = Mathf.Min(tubes.Count, 5);
-        const float tubeWidth = 54;
-        const float tubeHeight = 160;
-        const float tubeGap = 10;
-        const float rowGap = 24;
+        int columns = Mathf.Min(tubes.Count, 8);
         for (int i = 0; i < tubes.Count; i++)
         {
             int row = i / columns;
             int rowCount = Mathf.Min(columns, tubes.Count - row * columns);
-            float rowWidth = rowCount * tubeWidth + (rowCount - 1) * tubeGap;
-            float x = (width - rowWidth) / 2 + i % columns * (tubeWidth + tubeGap);
-            float y = 224 + row * (tubeHeight + rowGap) - (i == selected ? 7 : 0);
-            if (GUI.Button(new Rect(x, y, tubeWidth, tubeHeight), GUIContent.none))
+            float x = (width - (rowCount * 52 - 6)) / 2 + i % columns * 52;
+            float y = 188 + row * 158 - (i == selected ? 6 : 0);
+            if (GUI.Button(new Rect(x, y, 46, 145), GUIContent.none))
                 SelectTube(i);
-            Fill(new Rect(x, y, tubeWidth, tubeHeight), i == selected
-                ? new Color32(255, 208, 94, 100) : new Color32(13, 44, 72, 135));
-            DrawArt(tubeArt, new Rect(x + 3, y - 4, 48, 153), ScaleMode.StretchToFill);
-            float layer = 132f / capacity;
+            Fill(new Rect(x + 5, y + 5, 36, 120), i == selected
+                ? new Color32(72, 92, 121, 255) : new Color32(36, 48, 68, 255));
+            float layer = 116f / capacity;
             for (int j = 0; j < tubes[i].Count; j++)
             {
                 int color = tubes[i][j];
-                var rect = new Rect(x + 8, y + 143 - (j + 1) * layer, 38, layer + 2);
+                var rect = new Rect(x + 7, y + 123 - (j + 1) * layer, 32, layer - 1);
+                Fill(rect, new Color32(255, 255, 255, 22));
                 Texture2D fruit = fruitArt[Mathf.Clamp(color, 0, fruitArt.Length - 1)];
                 DrawArt(fruit, new Rect(rect.x, rect.y, rect.width, rect.height), ScaleMode.ScaleToFit);
             }
-            Fill(new Rect(x + 8, y + 8, 38, 3), new Color32(255, 255, 255, 210));
-            Fill(new Rect(x + 8, y + 10, 3, 128), new Color32(255, 255, 255, 130));
-            Fill(new Rect(x + 43, y + 10, 3, 128), new Color32(255, 255, 255, 90));
-            var tubeNumber = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 14 };
-            tubeNumber.normal.textColor = Color.white;
-            GUI.Label(new Rect(x, y + 143, tubeWidth, 20), (i + 1).ToString(), tubeNumber);
+            DrawArt(tubeArt, new Rect(x - 1, y - 8, 48, 153), ScaleMode.StretchToFill);
+            GUI.Label(new Rect(x + 13, y + 125, 32, 18), (i + 1).ToString());
         }
 
         string status = feedback;
         if (solved && winArt != null)
         {
-            DrawArt(winArt, new Rect(148, 590, 184, 55), ScaleMode.ScaleToFit);
+            DrawArt(winArt, new Rect(148, 478, 184, 55), ScaleMode.ScaleToFit);
             if (starFilledArt != null)
             {
-                DrawArt(starFilledArt, new Rect(190, 540, 42, 42), ScaleMode.ScaleToFit);
-                DrawArt(starFilledArt, new Rect(240, 540, 42, 42), ScaleMode.ScaleToFit);
+                DrawArt(starFilledArt, new Rect(190, 428, 42, 42), ScaleMode.ScaleToFit);
+                DrawArt(starFilledArt, new Rect(240, 428, 42, 42), ScaleMode.ScaleToFit);
             }
         }
         else
-            GUI.Label(new Rect(24, 590, 432, 32), status, infoStyle);
+            GUI.Label(new Rect(32, 501, 416, 32), status);
 
-        var actionStyle = new GUIStyle(GUI.skin.button)
-        {
-            fontSize = 18,
-            fontStyle = FontStyle.Bold
-        };
-        actionStyle.normal.textColor = Color.white;
         GUI.enabled = history.Count > 0;
-        if (GUI.Button(new Rect(24, 714, 128, 58), "Undo", actionStyle))
+        if (GUI.Button(new Rect(32, 548, 128, 58), "Undo"))
             Undo();
         GUI.enabled = true;
-        if (GUI.Button(new Rect(168, 710, 144, 64), new GUIContent(restartButtonArt)))
+        if (GUI.Button(new Rect(176, 548, 128, 58), new GUIContent(restartButtonArt)))
             LoadLevel(level);
         GUI.enabled = cleared && level + 1 < Levels.Length;
-        if (GUI.Button(new Rect(328, 710, 128, 64), new GUIContent(nextButtonArt)))
+        if (GUI.Button(new Rect(320, 548, 128, 58), new GUIContent(nextButtonArt)))
             LoadLevel(level + 1);
         GUI.enabled = true;
         GUI.matrix = previousMatrix;
